@@ -12,7 +12,7 @@ You can't do this to merge them because 'update' returns None and not self:
     c = a.copy().update(b)
     # c = None
 
-Using 'take':
+Using 'take' with dicts*:
 
     c = take(a.copy()).update(b).update({42: 'k'}).unwrap()
 
@@ -20,5 +20,12 @@ Using 'take':
     # a = {1: 'x', 2: 'y'}
     # b = {2: 'z', 3: 'y'}
 
-Dicts are taken for the purpose of example.
-There are obviously better ways to merge dicts.
+    *Dicts are taken for the purpose of example. There are obviously better ways to merge dicts.
+
+With lists:
+
+    c = take([1, 2, 3]).append(4).extend([5, 6]).unwrap()
+    # c = [1, 2, 3, 4, 5, 6]
+
+
+
