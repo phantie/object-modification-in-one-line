@@ -28,4 +28,12 @@ With lists:
     # c = [1, 2, 3, 4, 5, 6]
 
 
+Without assigning:
 
+    a = {}
+    take(a).update({1: 'x', 2: 'y'}).update({3: 'z'})
+    # a = {1: 'x', 2: 'y', 3: 'z'}
+    
+    b = [1, 2]
+    take(b).append(3).extend([4, 5])
+    # b = [1, 2, 3, 4, 5]
