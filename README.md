@@ -1,5 +1,5 @@
 # one-line_methods
-Run methods in one line even if they do not return 'self'.
+Execute methods in one line even if they do not return the object they are bound to.
 
 Say, we have:
 
