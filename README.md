@@ -62,3 +62,10 @@ Example without assigning:
     # b = [1, 2, 3, 4, 5]
 
 
+Install:
+
+    pip install git+https://github.com/phantie/object-modification-in-one-line.git
+
+Use:
+
+    from take import take
