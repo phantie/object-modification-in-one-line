@@ -15,5 +15,11 @@ class take:
     def __getattr__(self, name):
         return self.mockmeth(name, self)
 
+    def __call__(self, **kwargs):
+        obj = self.obj
+        for k, v in kwargs.items():
+            setattr(obj, k, v)
+        return self
+
     def unwrap(self):
         return self.obj
