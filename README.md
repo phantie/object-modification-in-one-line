@@ -1,6 +1,36 @@
 # attribute setting and method calling in one line
 Execute methods even if they do not return the object they are bound to and set attributes in one line.
 
+### Overview:
+    
+    class A:
+        secret = 8
+        def __init__(self, some):
+            self.some = some
+
+        def reset(self):
+            self.some = 0
+
+    a = A(69)
+
+Comparison:
+
+    take(a)(secret=42, new=0).reset()(some=13)
+   
+VS
+  
+    a.secret, a.new = 42, 0
+    a.reset()
+    a.some = 13
+  
+We get the same result:
+
+    assert a.secret == 42 and a.some == 13 and a.new == 0
+
+But more concise and readable solution.
+
+### Explanation:
+
 Say, we have:
 
     a = {1: 'x', 2: 'y'}
@@ -21,7 +51,7 @@ Using 'take':
     # b = {2: 'z', 3: 'y'}
 
 
-Without assigning:
+Example without assigning:
 
     a = {}
     take(a).update({1: 'x', 2: 'y'}).update({3: 'z'})
@@ -31,16 +61,4 @@ Without assigning:
     take(b).append(3).extend([4, 5])
     # b = [1, 2, 3, 4, 5]
 
-Change attributes:
-    
-    class A:
-        secret = 8
-        def __init__(self, some):
-            self.some = some
 
-        def reset(self):
-            self.some = 0
-
-    a = A(69)
-    take(a)(secret=42, new=0).reset()(some=13)
-    assert a.secret == 42 and a.some == 13 and a.new == 0
