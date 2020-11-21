@@ -1,5 +1,5 @@
-# one-line_methods
-Execute methods in one line even if they do not return the object they are bound to.
+# attribute setting and method calling in one line
+Execute methods even if they do not return the object they are bound to and set attributes in one line.
 
 Say, we have:
 
@@ -12,20 +12,13 @@ You can't do this to merge them because 'update' returns None and not self:
     c = a.copy().update(b)
     # c = None
 
-Using 'take' with dicts*:
+Using 'take':
 
     c = take(a.copy()).update(b).update({42: 'k'}).unwrap()
 
     # c = {1: 'x', 2: 'z', 3: 'y', 42: 'k'}
     # a = {1: 'x', 2: 'y'}
     # b = {2: 'z', 3: 'y'}
-
-    *Dicts are taken for the purpose of example. There are obviously better ways to merge dicts.
-
-With lists:
-
-    c = take([1, 2, 3]).append(4).extend([5, 6]).unwrap()
-    # c = [1, 2, 3, 4, 5, 6]
 
 
 Without assigning:
@@ -37,3 +30,17 @@ Without assigning:
     b = [1, 2]
     take(b).append(3).extend([4, 5])
     # b = [1, 2, 3, 4, 5]
+
+Change attributes:
+    
+    class A:
+        secret = 8
+        def __init__(self, some):
+            self.some = some
+
+        def reset(self):
+            self.some = 0
+
+    a = A(69)
+    take(a)(secret=42, new=0).reset()(some=13)
+    assert a.secret == 42 and a.some == 13 and a.new == 0
