@@ -64,7 +64,7 @@ Example without assigning:
 
 Install:
 
-    pip install git+https://github.com/phantie/object-modification-in-one-line.git
+    pip install git+https://github.com/phantie/take.git
 
 Use:
 
