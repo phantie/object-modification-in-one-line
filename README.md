@@ -1,5 +1,5 @@
 # attribute setting and method calling in one line
-Execute methods even if they do not return the object they are bound to and set attributes in one line.
+Execute methods even if they do not return the object they are bound to, set attributes and execute functions over stored objects in one line.
 
 ### Overview:
     
@@ -60,6 +60,22 @@ Example without assigning:
     b = [1, 2]
     take(b).append(3).extend([4, 5])
     # b = [1, 2, 3, 4, 5]
+
+
+If obj does not have a method you can do this:
+
+    take([])(print).extend((1,2,3))(partial(list.append, take.self, 4), print, list.clear, print)
+    # stdout:
+    [1, 2, 3]
+    [1, 2, 3, 4]
+    [1, 2, 3, 4, 5]
+    []
+
+    # * usually you don't need an underlying object even using partial,
+    # but list.append does NOT take keyword arguments, 
+    # so it doesn't work: partial(list.append, object=4)
+    # take.self object can be used ONLY in partial.
+
 
 
 Install:

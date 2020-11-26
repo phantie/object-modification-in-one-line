@@ -6,7 +6,7 @@ from os.path import join, dirname
 
 setup(
     name = 'take',
-    version = '1.0',
+    version = '1.1',
     packages = find_packages(),
     long_description = open(join(dirname(__file__), 'README.md')).read(),
 )
