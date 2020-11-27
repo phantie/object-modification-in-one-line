@@ -13,51 +13,56 @@ class take:
 
     @classmethod
     def _handle_partial(cls, f, taken):
-        def dispatch(taken, taken_attr_mock):
-            _ = taken
-            for attrname in taken_attr_mock.names:
-                _ = getattr(_, attrname)
+        def replace_with(taken, args, kwargs):
+            itself = cls.self
+            selfattr = cls.selfattr
 
-            # if taken_attr_mock.call_attrs is not None:
-            #     call_args, call_kwargs = taken_attr_mock.call_attrs
-            #     _ = _(*call_args, **call_kwargs)
-
-            return _
+            args = tuple((taken if v is itself else v.dispatch(taken) if isinstance(v, selfattr) else v) for v in args)
+            kwargs = {k: (taken if v is itself else v.dispatch(taken) if isinstance(v, selfattr) else v) for k, v in kwargs.items()}
+            return args, kwargs
 
         from functools import partial
+
+        if isinstance(f, take.selfattr):
+            if f.call_attrs is None:
+                raise TypeError(str(f.dispatch(taken)) + ' must be called/not be in this block')
+
+            f.call_attrs = replace_with(taken, *f.call_attrs)
+            f = partial(lambda _: _, f)
+
         altered = False
         if isinstance(f, partial):
-            def replace_with(taken, args, kwargs):
-
-                itself = cls.self
-                selfattr = cls.selfattr
-
-                args = tuple((taken if v is itself else dispatch(taken, v) if isinstance(v, selfattr) else v) for v in args)
-                kwargs = {k: (taken if v is itself else dispatch(taken, v) if isinstance(v, selfattr) else v) for k, v in kwargs.items()}
-                return args, kwargs
 
             args, kwargs = replace_with(taken, f.args, f.keywords)
             altered = args != f.args or kwargs != f.keywords
             f = partial(f.func, *args, **kwargs)
         
-        # elif isinstance(f, take.selfattr):
-
         return f, altered
 
     class selfattr:
         def __init__(self, name):
             self.names = [name]
-            # self.call_attrs = None
+            self.call_attrs = None
 
         def __getattr__(self, name):
             self.names.append(name)
-            # self.call_attrs = None
+            self.call_attrs = None
             return self
 
-        # def __call__(self, *args, **kwargs):
-        #     self.call_attrs = (args, kwargs)
-        #     return self
-            
+        def __call__(self, *args, **kwargs):
+            self.call_attrs = (args, kwargs)
+            return self
+        
+        def dispatch(self, taken):
+            _ = taken
+            for attrname in self.names:
+                _ = getattr(_, attrname)
+
+            if self.call_attrs is not None:
+                call_args, call_kwargs = self.call_attrs
+                _ = _(*call_args, **call_kwargs)
+
+            return _
 
     class self:
         def __getattr__(self, name):

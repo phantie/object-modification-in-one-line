@@ -10,6 +10,8 @@ from functools import partial
 
 # assert_eq = get_partial(assert_eq)
 
+self = take.self
+
 def assert_eq(v1, v2):
     def _assert_eq(v1, v2):
         assert v1 == v2
@@ -53,7 +55,7 @@ def test_case3():
     assert b == [1, 2, 3, 4, 5]
 
 def test_case4(capsys):
-    take([1,2,3])(print, partial(list.append, take.self, 4), print, list.clear, print)
+    take([1,2,3])(print, partial(list.append, self, 4), print, list.clear, print)
 
     assert capsys.readouterr().out == "[1, 2, 3]\n[1, 2, 3, 4]\n[]\n"
 
@@ -67,11 +69,11 @@ def test_case5(capsys):
         peaches = 3
 
     a = A()
-    take(a)(partial(sum_of, take.self, take.self.berries, take.self.carrots), partial(print, take.self.sum))
+    take(a)(partial(sum_of, self, self.berries, self.carrots), partial(print, self.sum))
 
     assert capsys.readouterr().out == "17\n"
     assert a.sum == 17
-    take(a)(partial(sum_of, take.self, take.self.carrots, take.self.peaches))
+    take(a)(partial(sum_of, self, self.carrots, self.peaches))
     assert a.sum == 10
 
 def test_case6():
@@ -85,14 +87,14 @@ def test_case6():
     a = A()
 
     (take(a)(
-        assert_eq(take.self.v, 0))
+        assert_eq(self.v, 0))
         .inc_v()
         .inc_v()(
-            assert_eq(take.self.v, 2),
+            assert_eq(self.v, 2),
         )(v=10, x=0)
         .dec_v()(
-            assert_eq(take.self.v, 9),
-            assert_eq(take.self.x, 0),
+            assert_eq(self.v, 9),
+            assert_eq(self.x, 0),
         )
     )
 
@@ -102,14 +104,23 @@ def test_case7():
         class B:
             foo = 7
 
-            # @classmethod
-            # def double_foo(cls):
-            #     cls.foo *= 2
+            def double_foo(cls):
+                cls.foo *= 2
+
+            def inc_foo_by(cls, value):
+                cls.foo += value
+
+            class C:
+                foo = 9
 
     a = A()
 
     take(a)(
-        assert_eq(take.self.foo, 5),
-        assert_eq(take.self.B.foo, 7),
-        # assert_eq(take.self.B.foo.__str__, int.__str__),
+        assert_eq(self.foo, 5),
+        assert_eq(self.B.foo, 7),
+        self.B.double_foo(self.B),
+        assert_eq(self.B.foo, 14),
+        self.B.inc_foo_by(self.B, self.foo),
+        assert_eq(self.B.foo, 19),
+        assert_eq(self.B.C.foo, 9),
     )
