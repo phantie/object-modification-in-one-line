@@ -95,3 +95,21 @@ def test_case6():
             assert_eq(take.self.x, 0),
         )
     )
+
+def test_case7():
+    class A:
+        foo = 5
+        class B:
+            foo = 7
+
+            # @classmethod
+            # def double_foo(cls):
+            #     cls.foo *= 2
+
+    a = A()
+
+    take(a)(
+        assert_eq(take.self.foo, 5),
+        assert_eq(take.self.B.foo, 7),
+        # assert_eq(take.self.B.foo.__str__, int.__str__),
+    )

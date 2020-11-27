@@ -13,24 +13,51 @@ class take:
 
     @classmethod
     def _handle_partial(cls, f, taken):
+        def dispatch(taken, taken_attr_mock):
+            _ = taken
+            for attrname in taken_attr_mock.names:
+                _ = getattr(_, attrname)
+
+            # if taken_attr_mock.call_attrs is not None:
+            #     call_args, call_kwargs = taken_attr_mock.call_attrs
+            #     _ = _(*call_args, **call_kwargs)
+
+            return _
+
         from functools import partial
         altered = False
         if isinstance(f, partial):
             def replace_with(taken, args, kwargs):
+
                 itself = cls.self
-                args = tuple((taken if v is itself else getattr(taken, v.name) if isinstance(v, cls.selfattr) else v) for v in args)
-                kwargs = {k: (taken if v is itself else getattr(taken, v.name) if isinstance(v, cls.selfattr) else v) for k, v in kwargs.items()}
+                selfattr = cls.selfattr
+
+                args = tuple((taken if v is itself else dispatch(taken, v) if isinstance(v, selfattr) else v) for v in args)
+                kwargs = {k: (taken if v is itself else dispatch(taken, v) if isinstance(v, selfattr) else v) for k, v in kwargs.items()}
                 return args, kwargs
 
             args, kwargs = replace_with(taken, f.args, f.keywords)
             altered = args != f.args or kwargs != f.keywords
             f = partial(f.func, *args, **kwargs)
+        
+        # elif isinstance(f, take.selfattr):
 
         return f, altered
 
     class selfattr:
         def __init__(self, name):
-            self.name = name
+            self.names = [name]
+            # self.call_attrs = None
+
+        def __getattr__(self, name):
+            self.names.append(name)
+            # self.call_attrs = None
+            return self
+
+        # def __call__(self, *args, **kwargs):
+        #     self.call_attrs = (args, kwargs)
+        #     return self
+            
 
     class self:
         def __getattr__(self, name):
@@ -57,3 +84,10 @@ class take:
 
     def unwrap(self):
         return self.obj
+
+# from functools import partial
+# def assert_eq(v1, v2):
+#     def _assert_eq(v1, v2):
+#         assert v1 == v2
+#     return partial(_assert_eq, v1, v2)
+    
