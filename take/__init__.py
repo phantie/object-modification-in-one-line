@@ -29,6 +29,8 @@ class take:
 
             f.call_attrs = replace_with(taken, *f.call_attrs)
             f = partial(lambda _: _, f)
+        elif isinstance(f, tuple):
+            f = partial(*f)
 
         altered = False
         if isinstance(f, partial):

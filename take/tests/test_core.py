@@ -124,3 +124,43 @@ def test_case7():
         assert_eq(self.B.foo, 19),
         assert_eq(self.B.C.foo, 9),
     )
+
+def test_case8():
+    class A:
+        foo = 10
+
+        def get_value(self, value):
+            return value * 3
+
+        def add_to_foo(self, value):
+            self.foo += value
+
+    a = A()
+
+    (take(a)
+        (assert_eq(self.foo, 10), foo=20)
+        (assert_eq(self.foo, 20), bar=40)
+        (assert_eq(self.bar, 40))
+        (partial(A.add_to_foo, self, self.get_value(5)))
+        (assert_eq(self.foo, 35))
+        )
+
+def test_case9():
+    def sum_of(self, attr1, attr2):
+        self.sum = attr1 + attr2
+
+    class A:
+        berries = 10
+        carrots = 7
+        peaches = 3
+
+    a = A()
+    take(a)(
+        (sum_of, self, self.berries, self.carrots), 
+        (print, self.sum),
+        assert_eq(self.sum, 17),
+        (sum_of, self, self.carrots, self.peaches),
+        assert_eq(self.sum, 10),
+        )(sum = None)(
+        assert_eq(self.sum, None)
+        )
