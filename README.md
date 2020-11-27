@@ -64,11 +64,10 @@ Example without assigning:
 
 If obj does not have a method you can do this:
 
-    take([])(print).extend((1,2,3))(partial(list.append, take.self, 4), print, list.clear, print)
+    take([1,2,3])(print, partial(list.append, take.self, 4), print, list.clear, print)
     # stdout:
     [1, 2, 3]
     [1, 2, 3, 4]
-    [1, 2, 3, 4, 5]
     []
 
     # * usually you don't need an underlying object even using partial,
