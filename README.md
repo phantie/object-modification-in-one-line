@@ -75,6 +75,29 @@ If obj does not have a method you can do this:
     # so it doesn't work: partial(list.append, object=4)
     # take.self object can be used ONLY in partial.
 
+One more:
+
+
+    class A: 
+        x = 0
+        def inc_x(self):
+            self.x += 1
+        def dec_x(self):
+            self.x -= 1
+
+    a = A()
+
+    (take(a)(
+        assert_eq(self.x, 0))
+        .inc_x()
+        .inc_x()(
+            assert_eq(self.x, 2),
+        )(x=10, z=0)
+        .dec_x()(
+            assert_eq(self.x, 9),
+            assert_eq(self.z, 0),
+        )
+    )
 
 
 Install:

@@ -80,23 +80,23 @@ def test_case5(capsys):
 
 def test_case6():
     class A: 
-        v = 0
-        def inc_v(self):
-            self.v += 1
-        def dec_v(self):
-            self.v -= 1
+        x = 0
+        def inc_x(self):
+            self.x += 1
+        def dec_x(self):
+            self.x -= 1
 
     a = A()
 
     (take(a)(
-        assert_eq(self.v, 0))
-        .inc_v()
-        .inc_v()(
-            assert_eq(self.v, 2),
-        )(v=10, x=0)
-        .dec_v()(
-            assert_eq(self.v, 9),
-            assert_eq(self.x, 0),
+        assert_eq(self.x, 0))
+        .inc_x()
+        .inc_x()(
+            assert_eq(self.x, 2),
+        )(x=10, z=0)
+        .dec_x()(
+            assert_eq(self.x, 9),
+            assert_eq(self.z, 0),
         )
     )
 
