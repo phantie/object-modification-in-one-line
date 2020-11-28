@@ -14,14 +14,22 @@ from functools import partial
 
 self = take.self
 
+def _assert_eq(v1, v2):
+    assert v1 == v2
+
+def _assert_ne(v1, v2):
+    assert v1 != v2
+
+def assert_eq_self(_):
+    return partial(_assert_eq, v2=_)
+
+def assert_ne_self(_):
+    return partial(_assert_ne, v2=_)
+
 def assert_eq(v1, v2):
-    def _assert_eq(v1, v2):
-        assert v1 == v2
     return partial(_assert_eq, v1, v2)
     
 def assert_ne(v1, v2):
-    def _assert_ne(v1, v2):
-        assert v1 != v2
     return partial(_assert_ne, v1, v2)
 
 def test_case1():
@@ -168,4 +176,50 @@ def test_case9():
         )
 
 def test_case10():
-    pass
+    class A:
+        def __init__(self, x):
+            self.x=x
+        def __eq__(self, other):
+            return other.x == self.x
+        def set_x(self, new):
+            self.x = new
+
+    take(A(10))(
+        assert_eq_self(A(10))
+    ).set_x(20)(
+        assert_ne_self(A(10)),
+        assert_eq_self(A(20))
+    )
+
+def test_case11():
+    class A:
+        foo = 5
+        class B:
+            foo = 7
+
+            def double_foo(cls):
+                cls.foo *= 2
+
+            def inc_foo_by(cls, value):
+                cls.foo += value
+
+            class C:
+                foo = 9
+
+                @classmethod
+                def get_hash(cls):
+                    return cls.foo * 3
+
+                @classmethod
+                def get_strong_hash(cls, universe):
+                    return cls.get_hash() + universe
+
+
+    a = A()
+
+    take(a)(
+        self.B.inc_foo_by(self.B, self.B.C.get_hash()),
+        assert_eq(self.B.foo, 7+27),
+        self.B.inc_foo_by(self.B, self.B.C.get_strong_hash(6)),
+        assert_eq(self.B.foo, 7+27+27+6),
+    )
