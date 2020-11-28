@@ -93,6 +93,9 @@ def test_case6():
             self.x += 1
         def dec_x(self):
             self.x -= 1
+        @classmethod
+        def double_x(self):
+            self.x *= 2
 
     a = A()
 
@@ -107,6 +110,10 @@ def test_case6():
             assert_eq(self.z, 0),
         )
     )
+    take(A)(x=1)(
+        self.double_x(),
+        assert_eq(self.x, 2)
+    )
 
 def test_case7():
     class A:
@@ -114,9 +121,11 @@ def test_case7():
         class B:
             foo = 7
 
+            @classmethod
             def double_foo(cls):
                 cls.foo *= 2
 
+            @classmethod
             def inc_foo_by(cls, value):
                 cls.foo += value
 
@@ -128,9 +137,9 @@ def test_case7():
     take(a)(
         assert_eq(self.foo, 5),
         assert_eq(self.B.foo, 7),
-        self.B.double_foo(self.B),
+        self.B.double_foo(),
         assert_eq(self.B.foo, 14),
-        self.B.inc_foo_by(self.B, self.foo),
+        self.B.inc_foo_by(self.foo),
         assert_eq(self.B.foo, 19),
         assert_eq(self.B.C.foo, 9),
     )
@@ -197,9 +206,11 @@ def test_case11():
         class B:
             foo = 7
 
+            @classmethod
             def double_foo(cls):
                 cls.foo *= 2
 
+            @classmethod
             def inc_foo_by(cls, value):
                 cls.foo += value
 
@@ -218,8 +229,8 @@ def test_case11():
     a = A()
 
     take(a)(
-        self.B.inc_foo_by(self.B, self.B.C.get_hash()),
+        self.B.inc_foo_by(self.B.C.get_hash()),
         assert_eq(self.B.foo, 7+27),
-        self.B.inc_foo_by(self.B, self.B.C.get_strong_hash(6)),
+        self.B.inc_foo_by(self.B.C.get_strong_hash(6)),
         assert_eq(self.B.foo, 7+27+27+6),
     )

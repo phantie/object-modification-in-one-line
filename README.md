@@ -73,7 +73,6 @@ If obj does not have a method you can do this:
     # * usually you don't need an underlying object even using partial,
     # but list.append does NOT take keyword arguments, 
     # so it doesn't work: partial(list.append, object=4)
-    # take.self object can be used ONLY in partial.
 
 One more:
 
@@ -84,6 +83,9 @@ One more:
             self.x += 1
         def dec_x(self):
             self.x -= 1
+        @classmethod
+        def double_x(self):
+            self.x *= 2
 
     a = A()
 
@@ -97,6 +99,10 @@ One more:
             assert_eq(self.x, 9),
             assert_eq(self.z, 0),
         )
+    )
+    take(A)(x=1)(
+        self.double_x(),
+        assert_eq(self.x, 2)
     )
 
 
