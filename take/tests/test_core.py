@@ -1,3 +1,5 @@
+"""In case of this particular project I write test also because I'm not sure how it works..."""
+
 import pytest
 from .. import take
 from functools import partial
@@ -164,3 +166,6 @@ def test_case9():
         )(sum = None)(
         assert_eq(self.sum, None)
         )
+
+def test_case10():
+    pass

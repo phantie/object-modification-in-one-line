@@ -12,32 +12,34 @@ class take:
             return self.taken
 
     @classmethod
-    def _handle_partial(cls, f, taken):
+    def _handle_argument_(cls, f, taken):
         def replace_with(taken, args, kwargs):
             itself = cls.self
             selfattr = cls.selfattr
 
-            args = tuple((taken if v is itself else v.dispatch(taken) if isinstance(v, selfattr) else v) for v in args)
-            kwargs = {k: (taken if v is itself else v.dispatch(taken) if isinstance(v, selfattr) else v) for k, v in kwargs.items()}
+            args = tuple((taken if v is itself else v._dispatch_(taken) if isinstance(v, selfattr) else v) for v in args)
+            kwargs = {k: (taken if v is itself else v._dispatch_(taken) if isinstance(v, selfattr) else v) for k, v in kwargs.items()}
             return args, kwargs
 
         from functools import partial
 
         if isinstance(f, take.selfattr):
             if f.call_attrs is None:
-                raise TypeError(str(f.dispatch(taken)) + ' must be called/not be in this block')
+                raise TypeError(str(f._dispatch_(taken)) + ' must be called/not be in this block')
 
             f.call_attrs = replace_with(taken, *f.call_attrs)
             f = partial(lambda _: _, f)
+
         elif isinstance(f, tuple):
             f = partial(*f)
 
-        altered = False
         if isinstance(f, partial):
 
             args, kwargs = replace_with(taken, f.args, f.keywords)
             altered = args != f.args or kwargs != f.keywords
             f = partial(f.func, *args, **kwargs)
+        else:
+            altered = False
         
         return f, altered
 
@@ -55,7 +57,7 @@ class take:
             self.call_attrs = (args, kwargs)
             return self
         
-        def dispatch(self, taken):
+        def _dispatch_(self, taken):
             _ = taken
             for attrname in self.names:
                 _ = getattr(_, attrname)
@@ -78,23 +80,17 @@ class take:
     def __getattr__(self, name):
         return self.mockmeth(name, self)
 
-    def __call__(self, *funcs, **names_values):
+    def __call__(self, *args, **names_values):
         obj = self.obj
 
-        for f in funcs:
-            f, altered = self._handle_partial(f, obj)
+        for a in args:
+            f, altered = self._handle_argument_(a, obj)
             f() if altered else f(obj)
 
         for k, v in names_values.items():
             setattr(obj, k, v)
+
         return self
 
     def unwrap(self):
         return self.obj
-
-# from functools import partial
-# def assert_eq(v1, v2):
-#     def _assert_eq(v1, v2):
-#         assert v1 == v2
-#     return partial(_assert_eq, v1, v2)
-    
