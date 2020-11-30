@@ -2,11 +2,6 @@ from functools import partial
 
 __all__ = ('take',)
 
-def args_kwargs_map(handler, args, kwargs):
-    args = tuple(handler(_) for _ in args)
-    kwargs = {k: handler(_) for k, _ in kwargs.items()}
-    return args, kwargs
-
 class selfattr:
     def __init__(self, name):
         self.names = [name]
@@ -90,8 +85,10 @@ class Parent:
 
                 kwargs = {k: self.handle_arg(v, False) for k, v in kwargs.items()}
 
-                if outer:
+                if outer and self.exec:
                     return partial(dispatched, *args, **kwargs)
+                elif outer and not self.exec:
+                    return dispatched(*args, **kwargs)
                 else:
                     return dispatched(*args, **kwargs)
             return dispatched
@@ -99,8 +96,11 @@ class Parent:
             return self.taken
 
         else:
-            if outer:
-                return partial(_, self.taken)
+            if self.exec:
+                if outer:
+                    return partial(_, self.taken)
+                else:
+                    return _
             else:
                 return _
             
@@ -116,6 +116,7 @@ class take:
             self.taken = taken
 
         def __call__(self, *args, **kwargs):
+            args, kwargs = Parent(args, kwargs, self.taken.obj, False).handle()
             self.bounded(*args, **kwargs)
             return self.taken
 

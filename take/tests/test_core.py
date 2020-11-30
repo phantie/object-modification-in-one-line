@@ -4,14 +4,6 @@ import pytest
 from .. import take
 from functools import partial
 
-# def get_partial(f):
-#     return f
-
-# def assert_eq(v1, v2):
-#     assert v1 == v2
-
-# assert_eq = get_partial(assert_eq)
-
 self = take.self
 
 def _assert_eq(v1, v2):
@@ -236,3 +228,8 @@ def test_case11():
         self.B.inc_foo_by(self.B.C.get_strong_hash(self.B.C.get_hash())),
         assert_eq(self.B.foo, 121),
     )
+
+def test_case12():
+    take([1, 2, 3]).extend(self)(assert_eq_self([1, 2, 3, 1, 2 ,3]))
+    take([1, 2, 3]).append(self.index(3))(assert_eq_self([1, 2, 3, 2]))
+    take([1, 2, 3]).extend(self).extend(self)(assert_eq_self([1, 2, 3] * 2 * 2))
