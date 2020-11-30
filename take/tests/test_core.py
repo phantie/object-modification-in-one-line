@@ -233,4 +233,6 @@ def test_case11():
         assert_eq(self.B.foo, 7+27),
         self.B.inc_foo_by(self.B.C.get_strong_hash(6)),
         assert_eq(self.B.foo, 7+27+27+6),
+        self.B.inc_foo_by(self.B.C.get_strong_hash(self.B.C.get_hash())),
+        assert_eq(self.B.foo, 121),
     )

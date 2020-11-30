@@ -1,3 +1,111 @@
+from functools import partial
+
+__all__ = ('take',)
+
+def args_kwargs_map(handler, args, kwargs):
+    args = tuple(handler(_) for _ in args)
+    kwargs = {k: handler(_) for k, _ in kwargs.items()}
+    return args, kwargs
+
+class selfattr:
+    def __init__(self, name):
+        self.names = [name]
+        self.call_attrs = None
+
+    def __getattr__(self, name):
+        self.names.append(name)
+        self.call_attrs = None
+        return self
+
+    def __call__(self, *args, **kwargs):
+        self.call_attrs = (args, kwargs)
+        return self
+    
+    def _dispatch_(self, taken):
+        _ = taken
+        for attrname in self.names:
+            _ = getattr(_, attrname)
+
+        if self.call_attrs is not None:
+            call_args, call_kwargs = self.call_attrs
+            _ = _(*call_args, **call_kwargs)
+
+        return _
+
+class self:
+    def __getattr__(self, name):
+        return selfattr(name)
+
+take_self = self()
+
+class Parent:
+
+    def __init__(self, args, kwargs, taken, exec = True):
+        self.args = args
+        self.kwargs = kwargs
+        self.taken = taken
+        self.exec = exec
+
+    def handle(self):
+        taken = self.taken
+        if not self.exec:
+            args, kwargs = [], {}
+
+        for arg in self.args:
+            arg = self.handle_arg(arg)
+            if self.exec:
+                arg()
+            else:
+                args.append(arg)
+
+        if not self.exec:
+            return args, kwargs
+
+
+    def handle_arg(self, _, outer=True):
+        inst = partial(isinstance, _)
+        
+        if inst(tuple):
+            return self.handle_arg(partial(*_), True)
+        elif inst(partial):
+            f = _.func
+            args = _.args
+            kwargs = _.keywords
+            args = tuple(self.handle_arg(a, False) for a in args)
+            kwargs = {k: self.handle_arg(v, False) for k, v in kwargs.items()}
+
+            if args == _.args and kwargs == _.keywords:
+                return partial(f, self.taken, *args, **kwargs)
+            else:
+                return partial(f, *args, **kwargs)
+        elif inst(selfattr):
+            dispatched = self.taken
+            for attrname in _.names:
+                dispatched = getattr(dispatched, attrname)
+
+            if _.call_attrs is not None:
+                args, kwargs = _.call_attrs
+
+                args = tuple(self.handle_arg(a, False) for a in args)
+
+                kwargs = {k: self.handle_arg(v, False) for k, v in kwargs.items()}
+
+                if outer:
+                    return partial(dispatched, *args, **kwargs)
+                else:
+                    return dispatched(*args, **kwargs)
+            return dispatched
+        elif _ is take_self:
+            return self.taken
+
+        else:
+            if outer:
+                return partial(_, self.taken)
+            else:
+                return _
+            
+
+
 class take:
     __slots__ = ('obj',)
 
@@ -11,68 +119,7 @@ class take:
             self.bounded(*args, **kwargs)
             return self.taken
 
-    @classmethod
-    def _handle_argument_(cls, f, taken):
-        def replace_with(taken, args, kwargs):
-            itself = cls.self
-            selfattr = cls.selfattr
-
-            args = tuple((taken if v is itself else v._dispatch_(taken) if isinstance(v, selfattr) else v) for v in args)
-            kwargs = {k: (taken if v is itself else v._dispatch_(taken) if isinstance(v, selfattr) else v) for k, v in kwargs.items()}
-            return args, kwargs
-
-        from functools import partial
-
-        if isinstance(f, take.selfattr):
-            if f.call_attrs is None:
-                raise TypeError(str(f._dispatch_(taken)) + ' must be called/not be in this block')
-
-            f.call_attrs = replace_with(taken, *f.call_attrs)
-            f = partial(lambda _: _, f)
-
-        elif isinstance(f, tuple):
-            f = partial(*f)
-
-        if isinstance(f, partial):
-
-            args, kwargs = replace_with(taken, f.args, f.keywords)
-            altered = args != f.args or kwargs != f.keywords
-            f = partial(f.func, *args, **kwargs)
-        else:
-            altered = False
-        
-        return f, altered
-
-    class selfattr:
-        def __init__(self, name):
-            self.names = [name]
-            self.call_attrs = None
-
-        def __getattr__(self, name):
-            self.names.append(name)
-            self.call_attrs = None
-            return self
-
-        def __call__(self, *args, **kwargs):
-            self.call_attrs = (args, kwargs)
-            return self
-        
-        def _dispatch_(self, taken):
-            _ = taken
-            for attrname in self.names:
-                _ = getattr(_, attrname)
-
-            if self.call_attrs is not None:
-                call_args, call_kwargs = self.call_attrs
-                _ = _(*call_args, **call_kwargs)
-
-            return _
-
-    class self:
-        def __getattr__(self, name):
-            return take.selfattr(name)
-
-    self = self()
+    self = take_self
 
     def __init__(self, obj):
         self.obj = obj
@@ -83,9 +130,7 @@ class take:
     def __call__(self, *args, **names_values):
         obj = self.obj
 
-        for a in args:
-            f, altered = self._handle_argument_(a, obj)
-            f() if altered else f(obj)
+        Parent(args, {}, obj).handle()
 
         for k, v in names_values.items():
             setattr(obj, k, v)
