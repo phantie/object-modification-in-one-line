@@ -15,17 +15,6 @@ class selfattr:
     def __call__(self, *args, **kwargs):
         self.call_attrs = (args, kwargs)
         return self
-    
-    def _dispatch_(self, taken):
-        _ = taken
-        for attrname in self.names:
-            _ = getattr(_, attrname)
-
-        if self.call_attrs is not None:
-            call_args, call_kwargs = self.call_attrs
-            _ = _(*call_args, **call_kwargs)
-
-        return _
 
 class self:
     def __getattr__(self, name):
@@ -33,7 +22,7 @@ class self:
 
 take_self = self()
 
-class Parent:
+class Handler:
 
     def __init__(self, args, kwargs, taken, exec = True):
         self.args = args
@@ -42,20 +31,14 @@ class Parent:
         self.exec = exec
 
     def handle(self):
-        taken = self.taken
-        if not self.exec:
+        if self.exec:
+            for arg in self.args:
+                self.handle_arg(arg)()
+        else:
             args, kwargs = [], {}
-
-        for arg in self.args:
-            arg = self.handle_arg(arg)
-            if self.exec:
-                arg()
-            else:
-                args.append(arg)
-
-        if not self.exec:
+            for arg in self.args:
+                args.append(self.handle_arg(arg))
             return args, kwargs
-
 
     def handle_arg(self, _, outer=True):
         inst = partial(isinstance, _)
@@ -105,7 +88,6 @@ class Parent:
                 return _
             
 
-
 class take:
     __slots__ = ('obj',)
 
@@ -116,7 +98,7 @@ class take:
             self.taken = taken
 
         def __call__(self, *args, **kwargs):
-            args, kwargs = Parent(args, kwargs, self.taken.obj, False).handle()
+            args, kwargs = Handler(args, kwargs, self.taken.obj, False).handle()
             self.bounded(*args, **kwargs)
             return self.taken
 
@@ -131,7 +113,7 @@ class take:
     def __call__(self, *args, **names_values):
         obj = self.obj
 
-        Parent(args, {}, obj).handle()
+        Handler(args, {}, obj).handle()
 
         for k, v in names_values.items():
             setattr(obj, k, v)
