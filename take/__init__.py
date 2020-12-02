@@ -1,26 +1,20 @@
-from functools import partial
-
 __all__ = ('take',)
 
-class selfattr:
-    def __init__(self, name):
-        self.names = [name]
+from functools import partial
+
+class mock_self:
+    def __init__(self):
+        self.names = []
         self.call_attrs = None
 
     def __getattr__(self, name):
-        self.names.append(name)
-        self.call_attrs = None
-        return self
+        _ = self.__class__()
+        _.names = self.names + [name]
+        return _
 
     def __call__(self, *args, **kwargs):
         self.call_attrs = (args, kwargs)
         return self
-
-class self:
-    def __getattr__(self, name):
-        return selfattr(name)
-
-take_self = self()
 
 class Handler:
 
@@ -56,7 +50,7 @@ class Handler:
                 return partial(f, self.taken, *args, **kwargs)
             else:
                 return partial(f, *args, **kwargs)
-        elif inst(selfattr):
+        elif inst(mock_self):
             dispatched = self.taken
             for attrname in _.names:
                 dispatched = getattr(dispatched, attrname)
@@ -75,8 +69,6 @@ class Handler:
                 else:
                     return dispatched(*args, **kwargs)
             return dispatched
-        elif _ is take_self:
-            return self.taken
 
         else:
             if self.exec:
@@ -102,7 +94,7 @@ class take:
             self.bounded(*args, **kwargs)
             return self.taken
 
-    self = take_self
+    self = mock_self()
 
     def __init__(self, obj):
         self.obj = obj
