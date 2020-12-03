@@ -233,3 +233,22 @@ def test_case12():
     take([1, 2, 3]).extend(self)(assert_eq_self([1, 2, 3, 1, 2 ,3]))
     take([1, 2, 3]).append(self.index(3))(assert_eq_self([1, 2, 3, 2]))
     take([1, 2, 3]).extend(self).extend(self)(assert_eq_self([1, 2, 3] * 2 * 2))
+
+def test_case13():
+    class A:
+        a = 0
+        b = 1
+        @classmethod
+        def set_a_to_value(cls, value=None):
+            cls.a = value
+
+    (take(A)
+        .set_a_to_value()
+            (assert_eq(self.a, None))
+        .set_a_to_value(self.b)
+            (assert_eq(self.a, 1))
+        .set_a_to_value(10)
+            (assert_eq(self.a, 10))
+        .set_a_to_value(value=self.b)
+            (assert_eq(self.a, 1))
+    )

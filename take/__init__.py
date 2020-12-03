@@ -28,10 +28,17 @@ class Handler:
         if self.exec:
             for arg in self.args:
                 self.handle_arg(arg)()
+
+            for v in self.kwargs.values():
+                self.handle_arg(v)
         else:
             args, kwargs = [], {}
             for arg in self.args:
                 args.append(self.handle_arg(arg))
+
+            for k, v in self.kwargs.items():
+                kwargs[k] = self.handle_arg(v)
+
             return args, kwargs
 
     def handle_arg(self, _, outer=True):
