@@ -1,28 +1,14 @@
 """In case of this particular project I write test also because I'm not sure how it works..."""
 
-import pytest
 from .. import take
+from ..tools import *
+
 from functools import partial
 
+import pytest
+
+
 self = take.self
-
-def _assert_eq(v1, v2):
-    assert v1 == v2
-
-def _assert_ne(v1, v2):
-    assert v1 != v2
-
-def assert_eq_self(_):
-    return partial(_assert_eq, v2=_)
-
-def assert_ne_self(_):
-    return partial(_assert_ne, v2=_)
-
-def assert_eq(v1, v2):
-    return partial(_assert_eq, v1, v2)
-    
-def assert_ne(v1, v2):
-    return partial(_assert_ne, v1, v2)
 
 def test_case1():
     class A:
