@@ -51,7 +51,7 @@ Using 'take':
     # b = {2: 'z', 3: 'y'}
 
 
-Example without assigning:
+Example with no assignment:
 
     a = {}
     take(a).update({1: 'x', 2: 'y'}).update({3: 'z'})
